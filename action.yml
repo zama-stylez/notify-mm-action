@@ -1,0 +1,79 @@
+name: "Notify Action"
+description: "Handles push and pull request notifications"
+inputs:
+  event_name:
+    description: "The GitHub event name"
+    required: true
+  event_action:
+    description: "The GitHub event action"
+    required: false
+  commits_json:
+    description: "The commits JSON payload"
+    required: false
+  pull_request_body:
+    description: "The pull request body"
+    required: false
+outputs:
+  color:
+    description: "Notification color"
+  text:
+    description: "Notification text"
+  json:
+    description: "Generated JSON payload"
+runs:
+  using: "ubuntu-latest"
+  steps:
+    - name: Handle Push Event
+      if: ${{ inputs.event_name == 'push' }}
+      run: |
+        BRANCH="[${GITHUB_REF_NAME}](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/tree/${GITHUB_REF_NAME})"
+        REPO="[${GITHUB_REPOSITORY}](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY})"
+        DIFF="[View Changes](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/compare/${GITHUB_EVENT_BEFORE}...${GITHUB_EVENT_AFTER})"
+        COMMITS="- Commits ( $DIFF )"
+        while IFS= read -r commit; do
+          SHA=$(echo "$commit" | jq -r '.id | .[0:7]')
+          MESSAGE_TEXT=$(echo "$commit" | jq -r '.message')
+          COMMIT_URL=$(echo "$commit" | jq -r '.url')
+          AUTHOR_NAME=$(echo "$commit" | jq -r '.author.name')
+          COMMITS="$COMMITS"$'\n'"  - [$SHA]($COMMIT_URL) : $MESSAGE_TEXT - $AUTHOR_NAME"$'\n'""  
+        done < <(echo "${{ inputs.commits_json }}" | jq -c '.[]')
+        EVENT="- Pushed by **${GITHUB_ACTOR}**"
+        TEXT="$EVENT @ $BRANCH ( $REPO )"$'\n'"$COMMITS"
+        RESULT=$(echo "$TEXT" | sed 's/\\/\\\\/g')
+        echo "color=#483d8b" >> $GITHUB_OUTPUT
+        echo "text=$RESULT" >> $GITHUB_OUTPUT
+
+    - name: Handle PR Open or Reopen
+      if: ${{ inputs.event_name == 'pull_request' && (inputs.event_action == 'opened' || inputs.event_action == 'reopened') }}
+      run: |
+        SOURCE_BRANCH="[${GITHUB_EVENT_PULL_REQUEST_HEAD_REF}](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/tree/${GITHUB_EVENT_PULL_REQUEST_HEAD_REF})"
+        TARGET_BRANCH="[${GITHUB_EVENT_PULL_REQUEST_BASE_REF}](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/tree/${GITHUB_EVENT_PULL_REQUEST_BASE_REF})"
+        REPO="[${GITHUB_REPOSITORY}](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY})"
+        EVENT="- ${{ inputs.event_action }} pull request [#${{ GITHUB_EVENT_PULL_REQUEST_NUMBER }}](${{ GITHUB_EVENT_PULL_REQUEST_HTML_URL }}) by **${{ GITHUB_ACTOR }}**"
+        PRETEXT="$EVENT @ $SOURCE_BRANCH to $TARGET_BRANCH ( $REPO )"
+        TITLE="[${{ GITHUB_EVENT_PULL_REQUEST_TITLE }}](${{ GITHUB_EVENT_PULL_REQUEST_HTML_URL }})"
+        DESCRIPTION=$(echo "${{ inputs.pull_request_body }}" | jq -r .)
+        TEXT="$PRETEXT"$'\n'"#### $TITLE"$'\n'"---"$'\n'"$DESCRIPTION"
+        if [ "$(echo -n "$TEXT" | wc -c)" -gt 5000 ]; then
+          TEXT="${TEXT:0:4997}...and more"
+        fi
+        RESULT=$(echo "$TEXT" | sed 's/\\/\\\\/g')
+        echo "color=#00ced1" >> $GITHUB_OUTPUT
+        echo "text=$RESULT" >> $GITHUB_OUTPUT
+
+    - name: Generate JSON Payload
+      run: |
+        COLOR="${{ steps.push.outputs.color || steps.pr_open.outputs.color || steps.pr_close.outputs.color }}"
+        TEXT="${{ steps.push.outputs.text || steps.pr_open.outputs.text || steps.pr_close.outputs.text }}"
+        JSON=$(jq -n --arg text "$TEXT" --arg color "$COLOR" \
+          '{
+          "username": "github-notification",
+          "icon_url": "https://www.iconfinder.com/icons/8725846/download/png/48",
+          "attachments": [
+              {
+                  "text": $text,
+                  "color": $color
+              }
+            ]
+        }' | sed ':a;N;$!ba;s/\\/\\\\/g')
+        echo "json=$JSON" >> $GITHUB_OUTPUT
