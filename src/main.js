@@ -20,7 +20,7 @@ async function run() {
       githubContext: core.getInput('GITHUB_CONTEXT', { required: true })
     }
 
-    const finalPayload = await generatePayload(inputs)
+    const finalPayload = await createPayloadJson(inputs)
     core.debug(`${JSON.stringify(finalPayload, undefined, 4)}`)
     await sendNotification(inputs.webhookURL, finalPayload)
   } catch (error) {
@@ -49,11 +49,11 @@ async function generatePayload(inputs) {
     return legacyPayloadFileData
   }
 
-  const json = await generateJson(inputs)
+  const payloadJson = await createPayloadJson(inputs)
 
-  if (json !== '') {
+  if (payloadJson !== '') {
     core.debug(`Will use the PAYLOAD input as is`)
-    return json
+    return payloadJson
   } else if (inputs.payload !== '') {
     core.debug(`Will use the PAYLOAD input as is`)
     return JSON.parse(inputs.payload)
@@ -88,7 +88,7 @@ async function checkLegacy(filePath) {
   }
 }
 
-async function generateJson(inputs) {
+async function createPayloadJson(inputs) {
   try {
     // GitHub Context をパース
     const githubContext = JSON.parse(inputs.githubContext)
@@ -116,33 +116,17 @@ async function addPayloadTemplate(text, color) {
   }
 }
 
-async function createPushPayload(githubContext) {
-
-  const actor = githubContext.triggering_actor;
-  const serverUrl = githubContext.server_url;
-  const repoJson = githubContext.repository;
-  const refName = githubContext.ref_name;
-  const commits = githubContext.event?.commits || [];
-  const before = githubContext.event?.before;
-  const after = githubContext.event?.after;
-
-  const branch = `[${refName}](${serverUrl}/${repoJson}/tree/${refName})`;
-  const repo = `[${repoJson}](${serverUrl}/${repoJson})`;
-  const diff = `[View Changes](${serverUrl}/${repoJson}/compare/${before}...${after})`;
-
-  let commitsText = `- Commits ( ${diff} )\n`;
-  for (const commit of commits) {
-    const sha = commit.id.slice(0, 7);
-    const messageText = commit.message;
-    const commitUrl = commit.url;
-    const authorName = commit.author.name;
-    commitsText += `  - [${sha}](${commitUrl}) : ${messageText} - ${authorName}\n`;
+async function createPushPayload(git) {
+  const branch = `[${git.ref_name}](${git.server_url}/${git.repository}/tree/${git.ref_name})`;
+  const repo = `[${git.repository}](${git.server_url}/${git.repository})`;
+  const viewChanges = `[View Changes](${git.server_url}/${git.repository}/compare/${git.event?.before}...${git.event?.after})`;
+  let commitsText = `- Commits ( ${viewChanges} )\n`;
+  for (const commit of (git.event?.commits || [])) {
+    commitsText += `  - [${commit.id.slice(0, 7)}](${commit.url}) : ${commit.message} - ${commit.author.name}\n`;
   }
-
-  const event = `- Pushed by **${actor}**`;
-  const text = `${event} @ ${branch} ( ${repo} )\n${commitsText}`;
-
-  return addPayloadTemplate(text, '#483d8b');
+  const event = `- Pushed by **${git.triggering_actor}**`;
+  const message = `${event} @ ${branch} ( ${repo} )\n${commitsText}`;
+  return addPayloadTemplate(message, '#483d8b');
 }
 
 module.exports = {
