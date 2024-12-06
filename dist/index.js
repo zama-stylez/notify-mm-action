@@ -29883,25 +29883,16 @@ async function run() {
   }
 }
 
-function linkJq() {
-    try {
-      execSync('mkdir -p /home/runner/work/_actions/zama-stylez/notify-mm-action/v1.0.0/bin/', { stdio: 'inherit' });
-      execSync('ln -s /usr/bin/jq /home/runner/work/_actions/zama-stylez/notify-mm-action/v1.0.0/bin/jq', { stdio: 'inherit' });
-      console.log('jq link successfully.');
-    } catch (installError) {
-      console.error('Failed to link jq:', installError.message);
-      process.exit(1); // エラーでプロセス終了
-    }
-}
-
-function checkJqInstalled() {
+function getJqPath() {
   try {
-    // jqのバージョンを取得してインストールされているか確認
-    const jqVersion = execSync('jq --version', { stdio: 'pipe' }).toString().trim();
-    console.log(`jq is installed: ${jqVersion}`);
+    const jqPath = execSync('which jq', { stdio: 'pipe' }).toString().trim();
+    if (!jqPath) {
+      throw new Error('jq command not found in PATH');
+    }
+    console.log(`Found jq at: ${jqPath}`);
+    return jqPath;
   } catch (error) {
-    // jqがインストールされていない場合、エラーをスロー
-    throw new Error('jq is not installed. Please install jq before proceeding.');
+    throw new Error('jq is not installed or not in PATH. Please install jq.');
   }
 }
 
@@ -29969,7 +29960,7 @@ async function generateJson(inputs) {
   try {
     // GitHub Context をパース
     const githubContext = JSON.parse(inputs.githubContext)
-    const options = { input: 'json', output: 'json' };
+    const options = { jqPath: getJqPath(), input: 'json', output: 'json' };
     const eventName = await jq.run('.event_name', githubContext, options)
     // console.log(`github: ${inputs.githubContext}`)
     console.log(`Event name: ${eventName}`)
