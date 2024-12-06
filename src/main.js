@@ -2,8 +2,6 @@ const core = require('@actions/core')
 const http = require('@actions/http-client')
 const path = require('path')
 const fs = require('fs').promises
-const jq = require('node-jq')
-const { execSync } = require('child_process');
 
 /**
  * The main function for the action.
