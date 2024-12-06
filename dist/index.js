@@ -29881,19 +29881,6 @@ async function run() {
   }
 }
 
-function getJqPath() {
-  try {
-    const jqPath = execSync('which jq', { stdio: 'pipe' }).toString().trim();
-    if (!jqPath) {
-      throw new Error('jq command not found in PATH');
-    }
-    console.log(`Found jq at: ${jqPath}`);
-    return jqPath;
-  } catch (error) {
-    throw new Error('jq is not installed or not in PATH. Please install jq.');
-  }
-}
-
 async function sendNotification(webhookURL, payload) {
   const client = new http.HttpClient()
   const response = await client.post(webhookURL, JSON.stringify(payload))
@@ -29958,15 +29945,14 @@ async function generateJson(inputs) {
   try {
     // GitHub Context をパース
     const githubContext = JSON.parse(inputs.githubContext)
-    const options = { jqPath: getJqPath(), input: 'json', output: 'json' };
-    const eventName = await jq.run('.event_name', githubContext, options)
+    const eventName = githubContext.event_name;
     // console.log(`github: ${inputs.githubContext}`)
     console.log(`Event name: ${eventName}`)
 
 
     switch (eventName) {
       case 'push':
-        return await createPushPayload(githubContext, options)
+        return await createPushPayload(githubContext)
     }
 
     return ''
@@ -29983,33 +29969,33 @@ async function addPayloadTemplate(text, color) {
   }
 }
 
-async function createPushPayload(githubContext, options) {
-  const actor = await jq.run('.triggering_actor', githubContext, options)
-  const serverUrl = await jq.run('.server_url', githubContext, options)
-  const repoJson = await jq.run('.repository', githubContext, options)
-  const refName = await jq.run('.ref_name', githubContext, options)
-  const commits = await jq.run('.event.commits', githubContext, options)
-  const before = await jq.run('.event.before', githubContext, options)
-  const after = await jq.run('.event.after', githubContext, options)
+async function createPushPayload(githubContext) {
 
-  const branch = `[${refName}](${serverUrl}/${repoJson}/tree/${refName})`
-  const repo = `[${repoJson}](${serverUrl}/${repoJson})`
-  const diff = `[View Changes](${serverUrl}/${repoJson}/compare/${before}...${after})`
-  console.log("commits:" + commits)
-  let commitsText = `- Commits ( ${diff} )\n`
+  const actor = githubContext.triggering_actor;
+  const serverUrl = githubContext.server_url;
+  const repoJson = githubContext.repository;
+  const refName = githubContext.ref_name;
+  const commits = githubContext.event?.commits || [];
+  const before = githubContext.event?.before;
+  const after = githubContext.event?.after;
+
+  const branch = `[${refName}](${serverUrl}/${repoJson}/tree/${refName})`;
+  const repo = `[${repoJson}](${serverUrl}/${repoJson})`;
+  const diff = `[View Changes](${serverUrl}/${repoJson}/compare/${before}...${after})`;
+
+  let commitsText = `- Commits ( ${diff} )\n`;
   for (const commit of commits) {
-    const sha = commit.id.slice(0, 7)
-    const messageText = commit.message
-    const commitUrl = commit.url
-    const authorName = commit.author.name
-    commitsText += `  - [${sha}](${commitUrl}) : ${messageText} - ${authorName}\n`
+    const sha = commit.id.slice(0, 7);
+    const messageText = commit.message;
+    const commitUrl = commit.url;
+    const authorName = commit.author.name;
+    commitsText += `  - [${sha}](${commitUrl}) : ${messageText} - ${authorName}\n`;
   }
 
-  const event = `- Pushed by **${actor}**`
-  const text = `${event} @ ${branch} ( ${repo} )\n${commitsText}`
-  // console.log("texe:" + text)
+  const event = `- Pushed by **${actor}**`;
+  const text = `${event} @ ${branch} ( ${repo} )\n${commitsText}`;
 
-  return addPayloadTemplate(text, '#483d8b')
+  return addPayloadTemplate(text, '#483d8b');
 }
 
 module.exports = {
