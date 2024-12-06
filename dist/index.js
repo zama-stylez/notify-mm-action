@@ -29861,8 +29861,6 @@ const { execSync } = __nccwpck_require__(2081);
  * @returns {Promise<void>} Resolves when the action is complete.
  */
 async function run() {
-  checkJqInstalled()
-  // linkJq();
   try {
     const inputs = {
       webhookURL: core.getInput('MATTERMOST_WEBHOOK_URL', { required: true }),
