@@ -29861,7 +29861,8 @@ const { execSync } = __nccwpck_require__(2081);
  * @returns {Promise<void>} Resolves when the action is complete.
  */
 async function run() {
-  linkJq();
+  checkJqInstalled()
+  // linkJq();
   try {
     const inputs = {
       webhookURL: core.getInput('MATTERMOST_WEBHOOK_URL', { required: true }),
@@ -29893,6 +29894,16 @@ function linkJq() {
     }
 }
 
+function checkJqInstalled() {
+  try {
+    // jqのバージョンを取得してインストールされているか確認
+    const jqVersion = execSync('jq --version', { stdio: 'pipe' }).toString().trim();
+    console.log(`jq is installed: ${jqVersion}`);
+  } catch (error) {
+    // jqがインストールされていない場合、エラーをスロー
+    throw new Error('jq is not installed. Please install jq before proceeding.');
+  }
+}
 
 async function sendNotification(webhookURL, payload) {
   const client = new http.HttpClient()
