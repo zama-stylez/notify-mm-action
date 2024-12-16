@@ -5,8 +5,16 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b8853e08-1351-4626-97fa-e7265372c2b6" name="Changes" comment="initial">
+      <change afterPath="$PROJECT_DIR$/.github/self_runner/ami-housekeeper.zip" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.github/self_runner/main.tf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.github/self_runner/output.tf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.github/self_runner/runner-binaries-syncer.zip" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.github/self_runner/runners.zip" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.github/self_runner/termination-watcher.zip" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.github/self_runner/test-runner-z.2024-12-11.private-key.pem" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.github/self_runner/webhook.zip" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.github/workflows/self-test.yml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/badges/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/badges/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -36,23 +44,25 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
-    &quot;last_opened_file_path&quot;: &quot;D:/git/notify-mm-action/.github/action&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;settings.nodejs&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "last_opened_file_path": "D:/git/notify-mm-action/.github/workflows",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "settings.nodejs",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="D:\git\notify-mm-action\.github\workflows" />
+      <recent name="D:\git\notify-mm-action\.github\self_runner" />
       <recent name="D:\git\notify-mm-action\.github\action" />
       <recent name="D:\git\notify-mm-action" />
     </key>
@@ -69,7 +79,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1733296340090</updated>
-      <workItem from="1733296341465" duration="16397000" />
+      <workItem from="1733296341465" duration="24960000" />
     </task>
     <task id="LOCAL-00001" summary="initial">
       <option name="closed" value="true" />
